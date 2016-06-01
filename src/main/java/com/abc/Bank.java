@@ -31,10 +31,11 @@ public class Bank {
         double total = 0;
         for(Customer c: customers)
             total += c.totalInterestEarned();
+        System.out.println("total"+total);
         return total;
     }
 
-    public String getFirstCustomer() {
+    public String t() {
         try {
             customers = null;
             return customers.get(0).getName();

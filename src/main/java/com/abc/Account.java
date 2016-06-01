@@ -1,6 +1,7 @@
 package com.abc;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Account {
@@ -25,34 +26,74 @@ public class Account {
         }
     }
 
-public void withdraw(double amount) {
-    if (amount <= 0) {
-        throw new IllegalArgumentException("amount must be greater than zero");
-    } else {
-        transactions.add(new Transaction(-amount));
-    }
-}
+	public void withdraw(double amount) {
+	    if (amount <= 0) {
+	        throw new IllegalArgumentException("amount must be greater than zero");
+	    } else {
+	        transactions.add(new Transaction(-amount));
+	    }
+	}
+	
+	public void transferTo(Account other, double amount){
+		if (other == null) {
+			throw new IllegalArgumentException("must have another account");
+		}
+		else if (amount <= 0) {
+			throw new IllegalArgumentException("amount must be greater than zero");
+		}
+		else {
+			this.transactions.add(new Transaction(-amount));
+			other.transactions.add(new Transaction(amount));
+		}
+	}
 
+	public boolean hasRecentWithdrawals(){
+		Date now = DateProvider.getInstance().now();
+		for (int i=this.transactions.size()-1;i>=0;i--){
+			Transaction tx = this.transactions.get(i);
+			Date date = tx.getTransactionDate();
+			long diff = now.getTime() - date.getTime();
+			if (diff > 10*24*60*60*1000) return false;
+			if (tx.isWithdrawal()){
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
     public double interestEarned() {
         double amount = sumTransactions();
+        double annualInterest = 0.0;
         switch(accountType){
             case SAVINGS:
                 if (amount <= 1000)
-                    return amount * 0.001;
+                	annualInterest = amount * 0.001;
                 else
-                    return 1 + (amount-1000) * 0.002;
+                	annualInterest = 1 + (amount-1000) * 0.002;
 //            case SUPER_SAVINGS:
 //                if (amount <= 4000)
 //                    return 20;
+                break;
             case MAXI_SAVINGS:
-                if (amount <= 1000)
-                    return amount * 0.02;
-                if (amount <= 2000)
-                    return 20 + (amount-1000) * 0.05;
-                return 70 + (amount-2000) * 0.1;
+            
+//                if (amount <= 1000)
+//                    return amount * 0.02;
+//                if (amount <= 2000)
+//                    return 20 + (amount-1000) * 0.05;
+//                return 70 + (amount-2000) * 0.1;
+            	
+            	// Change to new interest rules
+            	if (this.hasRecentWithdrawals())
+            		annualInterest = amount * 0.001;
+            	else
+            		annualInterest = amount * 0.05;
+            	break;
             default:
-                return amount * 0.001;
+            	annualInterest = amount * 0.001;
+            	break;
         }
+        return annualInterest / 365;
     }
 
     public double sumTransactions() {
@@ -68,6 +109,10 @@ public void withdraw(double amount) {
 
     public int getAccountType() {
         return accountType;
+    }
+    
+    public void addTransaction(Transaction t) {
+    	this.transactions.add(t);
     }
 
 }
